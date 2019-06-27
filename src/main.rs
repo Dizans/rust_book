@@ -360,3 +360,135 @@ mod performance_group {
 // 然后在src/sound/instrument.rs 中 pub fn clarinet() {
 //    // 函数体
 //}
+
+
+// collections
+
+fn vec_exp(){
+    // 当需要在 vector 中储存不同类型值时，我们可以定义并使用一个枚举！
+    let v:Vec<i32> = Vec::new();
+    let v = vec![1,2,3];
+    let mut v = Vec::new();
+    v.push(3);
+    v.push(4);
+    v.push(5);
+
+    let third: &i32 = &v[2];
+    println!("The third element is {}", third);
+
+    match v.get(2){
+        Some(third) => println!("This third element is {}", third),
+        None => println!("There is not third element"),
+    }
+
+    for i in &v{
+        println!("{}", i);
+    }
+
+    for i in &mut v{
+        *i += 50;
+    }
+
+}
+
+fn string_exp(){
+    let data= "initial contents";
+
+    let s = data.to_string();
+
+    let s = "initial contents".to_string();
+    let s = String::from("initial contents");
+
+    let mut s = String::from("foo");
+    s.push_str(" bar");
+    s.push('l');
+
+    let s1 = String::from("Hello, ");
+    let s2 = String::from("World");
+    let s3 = s1 + &s2; //s1失效  fn add(self, s: &str) -> String
+
+    //连接多个字符串推荐使用 format!
+
+    // rust不支持直接索引字符串
+    // let h = s1[0];  error
+    // 可以使用 s.chars() s.bytes()
+
+}
+
+
+
+fn hashmap_exp(){
+    use std::collections::HashMap;
+
+    // HashMap 默认使用一种 “密码学安全的”（“cryptographically strong” ）^siphash 哈希函数，
+    // 它可以抵抗拒绝服务（Denial of Service, DoS）攻击。然而这并不是可用的最快的算法
+    //你可以指定一个不同的 hasher 来切换为其它函数。
+    let mut score = HashMap::new();
+
+    score.insert(String::from("Blue"),10);
+    score.insert(String::from("Yellow"), 5);
+
+    let teams = vec![String::from("Blue"), String::from("Yellow")];
+    let initial_scores = vec![10,5];
+
+    let mut scores:HashMap<_,_> = teams.iter().zip(initial_scores.iter()).collect();
+    // 所有权
+    // 对于像 i32 这样的实现了 Copy trait 的类型，其值可以拷贝进哈希 map。
+    // 对于像 String 这样拥有所有权的值，其值将被移动而哈希 map 会成为这些值的所有者
+
+    let field_name = String::from("Favorite color");
+    let field_value = String::from("Blue");
+
+    let mut map = HashMap::new();
+    map.insert(field_name, field_value);
+    // field_name  和 field_value 失效
+    // 可以插入值的引用
+
+    let team_name = String::from("Blue");
+    let score = scores.get(&team_name); //option<T>
+
+    // 遍历HashMap (无序)
+    for (key, value) in &scores {
+        println!("{}: {}", key, value);
+    }
+
+
+    // 使用entry 来实现 只在键没有对应一个值时插入
+    let mut scores = HashMap::new();
+    scores.insert(String::from("Blue"), 10);
+
+    scores.entry(String::from("Yellow")).or_insert(50);
+
+    //根据旧值更新一个值
+
+    let text = "hello world wonderful world";
+
+    let mut map = HashMap::new();
+
+    for word in text.split_whitespace() {
+        let count = map.entry(word).or_insert(0);
+        //or_insert 方法事实上会返回这个键的值的一个可变引用（&mut V）
+        *count += 1;
+    }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
