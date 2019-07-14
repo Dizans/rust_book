@@ -19,6 +19,9 @@ fn main(){
     let hello = util::functions::hello("Qingyu".to_string());
     println!("{}", hello);
 
+    let v = vec![1,2,3,4];
+    println!("{}",largest(&v));
+
 }
 
 //1. 读写文件
@@ -470,9 +473,171 @@ fn hashmap_exp(){
         //or_insert 方法事实上会返回这个键的值的一个可变引用（&mut V）
         *count += 1;
     }
-
-
 }
+
+// error handler
+
+// panic! and Result<T,E>
+
+// RUST_BACKTRACE=1 cargo run
+// 查看 panic! 调用所生成的 backtrace 信息
+
+// panic 之后程序默认会开始 展开（unwinding）
+// 另一种选择是直接 终止（abort），这会不清理数据就退出程序, 在Cargo.toml中设置
+// [profile.release]
+// panic = 'abort'
+// 可以使最终的二进制文件变小
+
+// 匹配不同类型的错误
+use std::fs::File;
+use std::io::{ErrorKind, Read};
+
+fn match_different_kine_error(){
+    let f = File::open("hello.txt");
+    let f = match f{
+        Ok(file) => file,
+        Err(error) => match error.kind(){
+            ErrorKind::NotFound => match File::create("hello.txt"){
+                Ok(fc) => fc,
+                Err(e) => panic!("Tried to \
+                create file but there was a problem: {:?}",e)
+            },
+            other_error => panic!("There was \
+            a problem opening the file: {:?}",other_error)
+        }
+    };
+}
+
+fn error_kind_closure(){
+    let f = File::open("hello.txt").map_err(|error|{
+        if error.kind() == ErrorKind::NotFound{
+            File::create("hello.txt").unwrap_or_else(|error|{
+                panic!("Tried to \
+                create file but there was a problem: {:?}",error)
+            })
+        }else{
+            panic!("There was a problem opening the file: {:?}", error);
+        }
+    });
+}
+
+// return error
+
+fn return_error() -> Result<String,io::Error>{
+    let f = File::open("hello.txt");
+    let mut f = match f{
+        Ok(file) => file,
+        Err(e) => return Err(e),
+    };
+
+    let mut s = String::new();
+
+    match f.read_to_string(&mut s){
+        Ok(_) => Ok(s),
+        Err(e) => Err(e),
+    }
+}
+
+fn return_error_simple() -> Result<String, io::Error>{
+    let mut f = File::open("hello.txt")?;
+    let mut s = String::new();
+    f.read_to_string(&mut s)?;
+    Ok(s)
+}
+
+fn return_error_simpler()-> Result<String, io::Error>{
+    let mut s = String::new();
+    File::open("hello.txt")?.read_to_string(&mut s)?;
+    Ok(s)
+}
+
+use std::fs;
+fn return_error_simplest() -> Result<String, io::Error>{
+    fs::read_to_string("hello.txt")
+}
+
+
+// generic
+
+fn largest_i32(list: &[i32]) -> i32{
+    let mut largest = list[0];
+
+    for &item in list.iter(){
+        if item > largest{
+            largest = item;
+        }
+    }
+    largest
+}
+
+fn largest_char(list: &[char]) -> char {
+    let mut largest = list[0];
+
+    for &item in list.iter() {
+        if item > largest {
+            largest = item;
+        }
+    }
+
+    largest
+}
+
+fn largest<T>(list: &[T]) -> T {
+    let mut largest = list[0];
+
+    for &item in list.iter() {
+        if item > largest {
+            largest = item;
+        }
+    }
+
+    largest
+}
+
+
+struct TUPoint<T,U>{
+    x:T,
+    y:U,
+}
+
+struct Point<T>{
+    x: T,
+    y: T,
+}
+
+// 方法定义中的泛型
+impl<T> Point<T>{
+    fn x(&self) -> &T{
+        &self.x
+    }
+}
+
+// 为Point<f32>实例实现方法
+impl Point<f32>{
+    fn distance_from_origin(&self) -> f32{
+        (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+}
+
+// mixup Point 获取另一个作为参数，而它可能与调用 mixup 的 self 是不同的 Point 类型
+// T U V W
+impl<T,U> TUPoint<T,U>{
+    fn mixup<V,W>(self, other: TUPoint<V,W>) -> TUPoint<T,W>{
+        Point{
+            x: self.x,
+            y: other.y,
+        }
+
+    }
+}
+
+// 泛型代码会 单态化（monomorphization）， 所以运行时没有性能损失
+
+
+
+// trait
+
+
 
 
 
