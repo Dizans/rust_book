@@ -582,7 +582,7 @@ fn largest_char(list: &[char]) -> char {
     largest
 }
 
-fn largest<T>(list: &[T]) -> T {
+fn largest<T: PartialOrd + Copy>(list: &[T]) -> T {
     let mut largest = list[0];
 
     for &item in list.iter() {
@@ -637,8 +637,127 @@ impl<T,U> TUPoint<T,U>{
 
 // trait
 
+// 定义trait
+
+pub trait Summary{
+//    无默认实现
+//    fn summarize(&self) -> String;
+
+// 有默认实现
+      fn summarize(&self) -> String{
+            String::from("Read more...")
+      }
+}
 
 
+// 实现trait
+pub struct NewsArticle{
+    pub headline: String,
+    pub location: String,
+    pub author: String,
+    pub content: String,
+}
+
+impl Summary for NewsArticle{
+    fn summarize(&self) -> String{
+        format!("{}, by {} ({})", self.headline, self.author, self.location)
+    }
+}
+
+/*
+    如果想使用默认实现
+     impl Summary for NewsArticle {}
+     就可以了
+*/
+
+
+
+// trait 作为参数
+
+pub fn notify(item: impl Summary){
+    println!("Breaking news! {}", item.summarize());
+}
+
+use std::fmt::Display;
+use std::fmt::Debug;
+pub fn notify_multi(item: impl Summary + Display) {
+    println!("Breaking news! {}", item.summarize());
+}
+
+
+pub fn notify_another<T: Summary>(item: T){
+    println!("Breaking news! {}", item.summarize());
+}
+
+fn some_function<T, U>(t: T, u: U) -> i32
+    where T: Display + Clone,
+          U: Clone + Debug
+{
+    1
+}
+
+// 返回trait
+fn returns_summarizable() -> impl Summary {
+    // 只能返回一种类型
+    Tweet {
+        username: String::from("horse_ebooks"),
+        content: String::from("of course, as you probably already know, people"),
+        reply: false,
+        retweet: false,
+    }
+}
+
+
+// trait的作用域
+
+/*
+   别人可以通过use xxx 的方式将我们的pub 的 trait引入作用域
+   不能为外部类型实现外部 trait (孤儿原则):
+       为本地类型实现本地trait √
+       为外部类型实现本地trait (如 为Vec<T>实现Summary) √
+       为本地类型实现外部trait √
+       为外部类型实现外部trait x
+   如果两个 crate 分别对相同类型实现相同的 trait，Rust 将无从得知应该使用哪一个实现。
+
+#
+*/
+
+// trait 和泛型的结合
+// 有条件的为类型实现方法
+
+struct Pair<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Pair<T> {
+    fn new(x: T, y: T) -> Self {
+        Self {
+            x,
+            y,
+        }
+    }
+}
+
+impl<T: Display + PartialOrd> Pair<T> {
+    // 只有那些为 T 类型实现了 PartialOrd trait （来允许比较）
+    // 和 Display trait （来启用打印）的 Pair<T> 才会实现 cmp_display 方法
+    fn cmp_display(&self) {
+        if self.x >= self.y {
+            println!("The largest member is x = {}", self.x);
+        } else {
+            println!("The largest member is y = {}", self.y);
+        }
+    }
+}
+
+// 也可以有条件的为 实现了特定 trait 的类型有条件地实现 trait
+// 如，标准库为任何实现了 Display trait 的类型实现了 ToString trait
+/*
+    impl<T: Display> ToString for T {
+        // --snip--
+    }
+*/
 
 
 
